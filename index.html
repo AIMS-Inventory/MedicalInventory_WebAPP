@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASA HUNCH: AstroMed Inventory</title>
+    <!-- Link to our simple stylesheet -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for that "Space" look -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0"
+  }
+}
+</script>
+</head>
+<body>
+
+    <!-- LEFT SIDEBAR: Navigation -->
+    <nav class="sidebar">
+        <div class="brand">
+            <h1>ASTRO<span class="highlight">MED</span></h1>
+            <p>MISSION: MARS 2030</p>
+        </div>
+        
+        <!-- Navigation Buttons -->
+        <div class="nav-buttons">
+            <button onclick="showView('dashboard')" id="btn-dashboard" class="active">View Inventory</button>
+            <button onclick="showView('scanner')" id="btn-scanner">Smart Scan (OCR)</button>
+        </div>
+
+        <!-- Sidebar Info Panel -->
+        <div class="status-panel">
+            <h3>System Status</h3>
+            <p>Network: <span style="color: #4cd137">OFFLINE</span></p>
+            <p>Total Items: <span id="total-count">0</span></p>
+            <p class="small-note">HUNCH Prototype v1.0</p>
+        </div>
+    </nav>
+
+    <!-- RIGHT SIDE: Main Content -->
+    <main>
+        
+        <!-- VIEW 1: THE DASHBOARD -->
+        <section id="dashboard-view" class="view-section">
+            <header>
+                <h2>Medical Inventory Control</h2>
+                <div class="controls">
+                    <!-- Search Bar -->
+                    <input type="text" id="search-bar" placeholder="Search Meds (e.g., Amox...)" onkeyup="filterInventory()">
+                    <button onclick="exportCSV()" class="btn-outline">Download Report (.CSV)</button>
+                </div>
+            </header>
+
+            <!-- Inventory Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Medication Name</th>
+                            <th>Dosage</th>
+                            <th>Qty</th>
+                            <th>Expiry Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-table-body">
+                        <!-- Javascript will put rows here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- VIEW 2: THE SCANNER (The "Extraction" Feature) -->
+        <section id="scanner-view" class="view-section hidden">
+            <header>
+                <h2>Label Extraction Interface</h2>
+            </header>
+
+            <div class="scanner-layout">
+                <!-- Step 1: Input -->
+                <div class="scan-box">
+                    <h3>1. Raw Label Input</h3>
+                    <p class="instruction">Simulate OCR by pasting label text here:</p>
+                    <textarea id="raw-text-input" placeholder="Example Label:&#10;Ibuprofen 200mg&#10;Exp: 2027-05-20&#10;Qty: 100"></textarea>
+                    
+                    <button onclick="runExtraction()" class="btn-action">Run Extraction Protocol</button>
+                    <p id="scan-status" class="status-text"></p>
+                </div>
+
+                <!-- Step 2: Verification -->
+                <div class="form-box">
+                    <h3>2. Verify & Commit</h3>
+                    <p class="instruction">Check extracted data before saving.</p>
+                    
+                    <form id="add-item-form" onsubmit="saveItem(event)">
+                        <label>Medication Name</label>
+                        <input type="text" id="field-name" required>
+
+                        <div class="row">
+                            <div>
+                                <label>Dosage</label>
+                                <input type="text" id="field-dosage">
+                            </div>
+                            <div>
+                                <label>Quantity</label>
+                                <input type="number" id="field-qty" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div>
+                                <label>Expiration Date</label>
+                                <input type="date" id="field-date" required>
+                            </div>
+                            <div>
+                                <label>Lot Number</label>
+                                <input type="text" id="field-lot">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-save">Commit to Database</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Connect our Javascript logic -->
+    <script src="script.js"></script>
+</body>
+</html>

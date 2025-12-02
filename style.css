@@ -1,0 +1,293 @@
+/* 
+   NASA HUNCH STYLE SHEET 
+   Theme: Future Interface (Dark Mode)
+*/
+
+:root {
+    /* Color Palette Variables - Easy to change! */
+    --bg-color: #0b0c10;       /* Deep Space Black */
+    --panel-color: #1f2833;    /* Metal Grey */
+    --text-color: #c5c6c7;     /* Soft White */
+    --highlight-cyan: #66fcf1; /* Hologram Blue */
+    --highlight-dark: #45a29e; /* Muted Cyan */
+    --alert-red: #fc5c65;      /* Warning */
+    --warn-yellow: #fed330;    /* Caution */
+    --safe-green: #26de81;     /* Safe */
+}
+
+/* Base Reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Roboto', sans-serif;
+    display: flex; /* Sidebar layout */
+    height: 100vh;
+    overflow: hidden; /* Prevent full page scroll */
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 260px;
+    background-color: #000000;
+    border-right: 1px solid #333;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.brand h1 {
+    font-family: 'Space Mono', monospace;
+    color: white;
+    font-size: 24px;
+    letter-spacing: 2px;
+}
+
+.highlight {
+    color: var(--highlight-cyan);
+}
+
+.nav-buttons {
+    margin-top: 40px;
+    flex-grow: 1;
+}
+
+/* Sidebar Buttons */
+.nav-buttons button {
+    background: transparent;
+    color: var(--text-color);
+    border: none;
+    border-left: 3px solid transparent;
+    width: 100%;
+    padding: 15px;
+    text-align: left;
+    margin-bottom: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.3s; /* Smooth hover effect */
+}
+
+.nav-buttons button:hover {
+    background-color: rgba(102, 252, 241, 0.05);
+    color: white;
+}
+
+.nav-buttons button.active {
+    border-left: 3px solid var(--highlight-cyan);
+    background-color: rgba(102, 252, 241, 0.1);
+    color: white;
+    font-weight: bold;
+}
+
+/* Status Panel at bottom of sidebar */
+.status-panel {
+    border-top: 1px solid #333;
+    padding-top: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+}
+
+.small-note {
+    font-size: 10px;
+    color: #555;
+    margin-top: 10px;
+}
+
+/* --- MAIN CONTENT AREA --- */
+main {
+    flex-grow: 1;
+    padding: 30px;
+    overflow-y: auto; /* Allow scrolling inside main area */
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--panel-color);
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* --- INPUTS & BUTTONS --- */
+input, textarea {
+    background: #000;
+    border: 1px solid #444;
+    padding: 10px;
+    color: white;
+    border-radius: 4px;
+    font-family: 'Space Mono', monospace;
+}
+
+input:focus, textarea:focus {
+    border-color: var(--highlight-cyan);
+    outline: none;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--highlight-cyan);
+    color: var(--highlight-cyan);
+    padding: 8px 16px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-outline:hover {
+    background: var(--highlight-cyan);
+    color: black;
+}
+
+/* --- TABLE STYLES --- */
+.table-container {
+    background-color: var(--panel-color);
+    border-radius: 8px;
+    overflow: hidden; /* Rounds the corners of the table */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background-color: #151b24;
+    padding: 15px;
+    text-align: left;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--highlight-dark);
+}
+
+td {
+    padding: 15px;
+    border-bottom: 1px solid #333;
+    font-size: 14px;
+}
+
+tr:hover {
+    background-color: rgba(255,255,255, 0.05);
+}
+
+.med-name {
+    font-weight: bold;
+    color: white;
+    font-size: 15px;
+}
+
+/* --- STATUS BADGES --- */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    color: black;
+    letter-spacing: 1px;
+}
+
+.status-ok { background-color: var(--safe-green); }
+.status-warn { background-color: var(--warn-yellow); }
+.status-crit { background-color: var(--alert-red); }
+
+.btn-delete {
+    background: transparent;
+    border: 1px solid #555;
+    color: #777;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 10px;
+}
+.btn-delete:hover {
+    border-color: var(--alert-red);
+    color: var(--alert-red);
+}
+
+/* --- SCANNER VIEW --- */
+.hidden { display: none; }
+
+.scanner-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.scan-box, .form-box {
+    background-color: var(--panel-color);
+    padding: 25px;
+    border-radius: 8px;
+}
+
+textarea {
+    width: 100%;
+    height: 150px;
+    margin: 15px 0;
+    color: var(--safe-green); /* Matrix style text */
+}
+
+.status-text {
+    margin-top: 10px;
+    font-weight: bold;
+    font-family: 'Space Mono', monospace;
+}
+
+.btn-action {
+    background-color: var(--highlight-dark);
+    color: white;
+    border: none;
+    padding: 12px;
+    width: 100%;
+    cursor: pointer;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-action:hover {
+    background-color: var(--highlight-cyan);
+    color: black;
+}
+
+/* Form Grid */
+.row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+label {
+    display: block;
+    font-size: 11px;
+    color: var(--highlight-dark);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    margin-top: 15px;
+}
+
+.btn-save {
+    background-color: var(--safe-green);
+    color: black;
+    border: none;
+    padding: 15px;
+    width: 100%;
+    margin-top: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-save:hover {
+    background-color: #20bf6b;
+}
