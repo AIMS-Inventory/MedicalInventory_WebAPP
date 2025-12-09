@@ -343,7 +343,8 @@ tr:hover {
 }
 
 /* --- SCANNER VIEW --- */
-.hidden { display: none; }
+/* FIX: ensure this hides elements even when IDs have display rules */
+.hidden { display: none !important; }
 
 .scanner-layout {
     display: grid;
