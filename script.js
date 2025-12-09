@@ -1,16 +1,105 @@
-// --- ASTROMED INVENTORY SYSTEM ---
-// Written for NASA HUNCH 2026 Prototype
+// Visual Inventory Tracking System - NASA HUNCH
+// Jetson Nano Prototype
 
-// 1. STATE MANAGEMENT
-// We keep the list of items in this global variable so we can access it anywhere.
+// Authentication
+const CORRECT_PASSWORD = "nasa2024"; // Simple password for prototype
+let isAuthenticated = false;
+
+// List of items
 let inventory = [];
+let usageLogs = [];
+let predictions = [];
 
-// When the app starts, run these functions immediately
+// When the app starts, check authentication
 window.onload = function() {
-    loadData();      // Load from LocalStorage
-    renderTable();   // Draw the table
-    updateStats();   // Update sidebar numbers
+    checkAuth();
+    // If authenticated, initialize the app
+    if (isAuthenticated) {
+        initializeApp();
+    }
+    
+    // Also attach event listener to login form as backup
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleLogin(e);
+        });
+    }
 };
+
+// Check if user is already authenticated (from sessionStorage)
+function checkAuth() {
+    const authStatus = sessionStorage.getItem('astroMedAuth');
+    if (authStatus === 'true') {
+        isAuthenticated = true;
+        showApp();
+    } else {
+        showLogin();
+    }
+}
+
+// Show login page, hide app
+function showLogin() {
+    document.getElementById('login-view').classList.remove('hidden');
+    document.getElementById('app-container').classList.add('hidden');
+}
+
+// Show app, hide login
+function showApp() {
+    document.getElementById('login-view').classList.add('hidden');
+    document.getElementById('app-container').classList.remove('hidden');
+}
+
+// Handle login form submission
+function handleLogin(event) {
+    if (event) {
+        event.preventDefault();
+    }
+    
+    const passwordInput = document.getElementById('password-input');
+    const errorMsg = document.getElementById('login-error');
+    
+    if (!passwordInput) {
+        alert('Error: Password input field not found. Please refresh the page.');
+        return;
+    }
+    
+    const password = passwordInput.value;
+    
+    if (password === CORRECT_PASSWORD) {
+        isAuthenticated = true;
+        sessionStorage.setItem('astroMedAuth', 'true');
+        showApp();
+        initializeApp();
+    } else {
+        if (errorMsg) {
+            errorMsg.textContent = "Invalid password. Access denied.";
+            errorMsg.style.display = 'block';
+        }
+        passwordInput.value = '';
+    }
+}
+
+// Logout function
+function logout() {
+    if (confirm("Are you sure you want to logout?")) {
+        isAuthenticated = false;
+        sessionStorage.removeItem('astroMedAuth');
+        showLogin();
+        document.getElementById('password-input').value = '';
+        document.getElementById('login-error').style.display = 'none';
+    }
+}
+
+// Initialize the application after authentication
+function initializeApp() {
+    loadData();           // Load from LocalStorage
+    loadUsageLogs();      // Load from logs.json
+    loadPredictions();    // Load from predictions.json
+    renderTable();        // Draw the table
+    updateStats();        // Update sidebar numbers
+}
 
 // --- CORE FUNCTIONS (DATABASE) ---
 
@@ -22,13 +111,13 @@ function loadData() {
         // If we have data saved, use it
         inventory = JSON.parse(storedData);
     } else {
-        // If it's the first time running, load some Mock Data so judges see something
+        // [TODO: Initialize default data if storage is empty]
         inventory = [
             { id: 1, name: 'Ibuprofen', dosage: '200mg', qty: 150, expiry: '2027-05-15', lot: 'IB-99' },
             { id: 2, name: 'Epinephrine', dosage: '0.3mg', qty: 2, expiry: '2024-12-01', lot: 'EPI-1' },
             { id: 3, name: 'Bandages', dosage: 'N/A', qty: 50, expiry: '2030-01-01', lot: 'BND-5' }
         ];
-        saveData(); // Save this mock data
+        saveData(); // [TODO: Save initial data]
     }
 }
 
@@ -38,20 +127,19 @@ function saveData() {
     updateStats();
 }
 
-// --- EXTRACTION ENGINE (THE "SMART SCAN" LOGIC) ---
-// This function mimics OCR (Optical Character Recognition).
-// It looks for patterns in the text to "guess" the data.
+// Scanner Logic
+// Reads text to find data
 function runExtraction() {
     const rawText = document.getElementById('raw-text-input').value;
     const btn = document.querySelector('.btn-action');
     const statusMsg = document.getElementById('scan-status');
 
-    // 1. Visual Feedback (Make it look like it's processing)
-    btn.innerHTML = "SCANNING...";
+    // Show loading
+    btn.innerHTML = "Scanning...";
     btn.style.backgroundColor = "#999";
     
     setTimeout(() => {
-        // 2. REGEX LOGIC (Pattern Matching)
+        // Find patterns
         
         // Find Date (Looks for YYYY-MM-DD)
         // Explanation: \d{4} is 4 digits, \d{2} is 2 digits
@@ -77,9 +165,9 @@ function runExtraction() {
         if (nameGuess) document.getElementById('field-name').value = nameGuess;
 
         // Reset Button
-        btn.innerHTML = "Run Extraction Protocol";
+        btn.innerHTML = "Scan Text";
         btn.style.backgroundColor = ""; // Reset color
-        statusMsg.innerText = "Data Extracted Successfully.";
+        statusMsg.innerText = "Scan complete.";
         statusMsg.style.color = "#26de81"; // Green
         
     }, 800); // 0.8 second delay to simulate computer thinking
@@ -107,7 +195,7 @@ function saveItem(event) {
     document.getElementById('raw-text-input').value = '';
     document.getElementById('scan-status').innerText = '';
     
-    alert("Item added to Mainframe Inventory.");
+    alert("Item saved.");
     showView('dashboard');
     renderTable();
 }
@@ -173,20 +261,183 @@ function renderTable(searchTerm = "") {
 
 // --- NAVIGATION (Switching Screens) ---
 function showView(viewName) {
-    // Hide all sections
-    document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+    // Only allow navigation if authenticated
+    if (!isAuthenticated) {
+        showLogin();
+        return;
+    }
+    
+    // Hide all sections inside the app container only (not login view)
+    const appContainer = document.getElementById('app-container');
+    if (appContainer) {
+        appContainer.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+    }
     
     // Remove 'active' class from buttons
     document.querySelectorAll('.nav-buttons button').forEach(el => el.classList.remove('active'));
 
     // Show the requested section
-    document.getElementById(viewName + '-view').classList.remove('hidden');
-    document.getElementById('btn-' + viewName).classList.add('active');
+    const viewElement = document.getElementById(viewName + '-view');
+    if (viewElement) {
+        viewElement.classList.remove('hidden');
+        const btnElement = document.getElementById('btn-' + viewName);
+        if (btnElement) {
+            btnElement.classList.add('active');
+        }
+        
+        // Load data when switching to specific views
+        if (viewName === 'inventory-log') {
+            renderLogTable();
+        } else if (viewName === 'predictions') {
+            renderPredictions();
+        }
+    }
 }
 
 // Update the counters in the sidebar
 function updateStats() {
     document.getElementById('total-count').innerText = inventory.length;
+}
+
+// --- LOAD USAGE LOGS FROM JSON ---
+function loadUsageLogs() {
+    // Try to fetch logs.json file
+    fetch('logs.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('logs.json not found');
+            }
+            return response.json();
+        })
+        .then(data => {
+            usageLogs = data.logs || [];
+            if (document.getElementById('inventory-log-view') && !document.getElementById('inventory-log-view').classList.contains('hidden')) {
+                renderLogTable();
+            }
+        })
+        .catch(error => {
+            console.log('Could not load logs.json. Using empty array.');
+            usageLogs = [];
+        });
+}
+
+// --- RENDER INVENTORY LOG TABLE ---
+function renderLogTable() {
+    const tbody = document.getElementById('log-table-body');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    if (usageLogs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 30px;">No log entries found. Data will appear here when items are detected by the camera system.</td></tr>';
+        return;
+    }
+    
+    // Sort by timestamp (newest first)
+    const sortedLogs = [...usageLogs].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    sortedLogs.forEach(log => {
+        const row = `
+            <tr>
+                <td>${formatTimestamp(log.timestamp)}</td>
+                <td class="med-name">${log.itemName}</td>
+                <td style="font-family:'Space Mono'">-${log.quantityRemoved}</td>
+                <td>${log.user}</td>
+                <td>${log.location || 'ISS Module'}</td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+}
+
+// --- LOAD PREDICTIONS FROM JSON ---
+function loadPredictions() {
+    // Try to fetch predictions.json file
+    fetch('predictions.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('predictions.json not found');
+            }
+            return response.json();
+        })
+        .then(data => {
+            predictions = data.predictions || [];
+            if (document.getElementById('predictions-view') && !document.getElementById('predictions-view').classList.contains('hidden')) {
+                renderPredictions();
+            }
+        })
+        .catch(error => {
+            console.log('Could not load predictions.json. Using empty array.');
+            predictions = [];
+        });
+}
+
+// --- RENDER PREDICTIONS PANEL ---
+function renderPredictions() {
+    const container = document.getElementById('predictions-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (predictions.length === 0) {
+        container.innerHTML = '<div class="prediction-card"><p style="text-align: center; padding: 30px;">No predictions available. AI model will generate forecasts based on usage patterns.</p></div>';
+        return;
+    }
+    
+    // Sort by days until depletion (most urgent first)
+    const sortedPredictions = [...predictions].sort((a, b) => a.daysUntilDepletion - b.daysUntilDepletion);
+    
+    sortedPredictions.forEach(pred => {
+        // Determine urgency level
+        let urgencyClass = 'prediction-ok';
+        let urgencyLabel = 'NORMAL';
+        if (pred.daysUntilDepletion < 7) {
+            urgencyClass = 'prediction-crit';
+            urgencyLabel = 'CRITICAL';
+        } else if (pred.daysUntilDepletion < 30) {
+            urgencyClass = 'prediction-warn';
+            urgencyLabel = 'WARNING';
+        }
+        
+        const card = `
+            <div class="prediction-card ${urgencyClass}">
+                <div class="prediction-header">
+                    <h3>${pred.itemName}</h3>
+                    <span class="urgency-badge ${urgencyClass}">${urgencyLabel}</span>
+                </div>
+                <div class="prediction-details">
+                    <p><strong>Current Stock:</strong> ${pred.currentStock} units</p>
+                    <p><strong>Predicted Depletion:</strong> ${pred.daysUntilDepletion} days</p>
+                    <p><strong>Estimated Date:</strong> ${formatDate(pred.estimatedDepletionDate)}</p>
+                    <p><strong>Usage Rate:</strong> ${pred.usageRate} units/day</p>
+                    <p class="prediction-note">${pred.recommendation || 'Monitor closely'}</p>
+                </div>
+            </div>
+        `;
+        container.innerHTML += card;
+    });
+}
+
+// --- HELPER FUNCTIONS ---
+function formatTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
 }
 
 // --- EXPORT TO CSV (Mission Report) ---
@@ -205,3 +456,13 @@ function exportCSV() {
     a.download = 'Mission_Inventory_Report.csv';
     a.click();
 }
+
+// Ensure functions are globally accessible (for inline event handlers)
+window.handleLogin = handleLogin;
+window.logout = logout;
+window.showView = showView;
+window.deleteItem = deleteItem;
+window.filterInventory = filterInventory;
+window.runExtraction = runExtraction;
+window.saveItem = saveItem;
+window.exportCSV = exportCSV;
