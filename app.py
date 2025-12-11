@@ -1,7 +1,4 @@
 """
-Simple Flask Backend Example for NASA HUNCH Visual Inventory Tracking System
-This is a basic example - you can expand this for actual Jetson Nano integration.
-
 To run: python app.py
 Then access: http://localhost:5000
 """
@@ -17,7 +14,9 @@ app.secret_key = 'nasa-hunch-2024-secret-key'  # Change this in production!
 CORS(app)  # Allow cross-origin requests
 
 # Simple password check (for prototype)
-CORRECT_PASSWORD = "nasa2024"
+# NOTE: This is hardcoded for prototype demonstration only
+# In production, this would authenticate against a database
+CORRECT_PASSWORD = "nasa2024"  # Match the JavaScript password
 
 @app.route('/')
 def index():
