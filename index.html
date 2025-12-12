@@ -17,7 +17,7 @@
             <div class="login-box">
                 <h1>ASTRO<span class="highlight">MED</span></h1>
                 <h2>Visual Inventory Tracking System</h2>
-                <p class="login-subtitle">NASA HUNCH - ISS Medical Supplies</p>
+                <p class="login-subtitle">PCTI STEM • Team Lakind</p>
                 
                 <form id="login-form" onsubmit="handleLogin(event); return false;">
                     <label>Enter Access Password</label>
@@ -37,14 +37,14 @@
         <nav class="sidebar">
             <div class="brand">
                 <h1>ASTRO<span class="highlight">MED</span></h1>
-                <p>ISS Visual Tracking</p>
+                <p>PCTI STEM | Team Lakind</p>
             </div>
             
             <!-- Navigation Buttons -->
             <div class="nav-buttons">
                 <button onclick="showView('dashboard')" id="btn-dashboard" class="active">Dashboard</button>
                 <button onclick="showView('scanner')" id="btn-scanner">Smart Scan (OCR)</button>
-                <button onclick="showView('about')" id="btn-about">System Info</button>
+                <button onclick="showView('about')" id="btn-about">About Us</button>
             </div>
 
             <!-- Sidebar Info Panel -->
@@ -54,7 +54,7 @@
                 <p>Total Items: <span id="total-count">0</span></p>
                 <p>Camera: <span id="camera-status" style="color: #66fcf1">ACTIVE</span></p>
                 <button onclick="logout()" class="btn-logout">LOGOUT</button>
-                <p class="small-note">Jetson Nano v1.0</p>
+                <p class="small-note">Prototype v1.0</p>
             </div>
         </nav>
 
@@ -71,19 +71,6 @@
                         <button onclick="syncWithBackend()" class="btn-outline">Sync with AI</button>
                     </div>
                 </header>
-
-                <!-- Live Video Stream Placeholder -->
-                <div class="video-container">
-                    <h3>Live Camera Feed</h3>
-                    <div class="video-placeholder">
-                        <div class="video-placeholder-content">
-                            <p class="video-icon">📹</p>
-                            <p>Jetson Nano Camera Stream</p>
-                            <p class="video-note">[Video feed will be displayed here when connected]</p>
-                            <p class="video-note">Stream URL: http://jetson-nano-ip:8080/stream</p>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Inventory Table -->
                 <div style="margin-top: 30px;">
@@ -169,10 +156,20 @@
         <!-- About Section -->
         <section id="about-view" class="view-section hidden">
             <header>
-                <h2>System Information</h2>
+                <h2>About Us</h2>
             </header>
+            
+            <!-- Team Info -->
+            <div class="scan-box" style="margin-bottom: 20px; border-left: 4px solid var(--highlight-cyan);">
+                <h3>Team Information</h3>
+                <p><strong>School:</strong> PCTI STEM</p>
+                <p><strong>Team Name:</strong> Team Lakind</p>
+                <p><strong>Project:</strong> NASA HUNCH - Medical Inventory System</p>
+                <p><strong>Version:</strong> Prototype v1.0</p>
+            </div>
+
             <div class="scan-box" style="color: var(--text-color);">
-                <h3>Visual Inventory Tracking System</h3>
+                <h3>System Architecture</h3>
                 <p style="margin-bottom: 15px;"><strong>Platform:</strong> NVIDIA Jetson Nano</p>
                 <p style="margin-bottom: 15px;"><strong>Core Technology:</strong> Computer Vision (OpenCV) & AI</p>
                 

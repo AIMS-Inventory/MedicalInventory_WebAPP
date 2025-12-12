@@ -11,7 +11,8 @@ This web-based interface serves as the control panel for the **Jetson Nano Visua
 *   **AI Sync:** Exports inventory data to CSV format for the C++ backend.
 
 ## How to Run
-1.  Open `index.html` in any modern web browser.
+1.  **Double-click** the `LAUNCH_APP.bat` file.
+    *   (Or open `index.html` in any browser).
 2.  Use the Dashboard to view items.
 3.  Use the Scanner to add new items.
 4.  Click "Sync with AI" to generate data files for the Jetson Nano.

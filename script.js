@@ -9,8 +9,6 @@ let isAuthenticated = false;
 
 // List of items
 let inventory = [];
-let usageLogs = [];
-let predictions = [];
 
 // When the app starts, check authentication
 window.onload = function() {
@@ -97,8 +95,6 @@ function logout() {
 // Initialize the application after authentication
 function initializeApp() {
     loadData();           // Load from LocalStorage
-    loadUsageLogs();      // Load from logs.json
-    loadPredictions();    // Load from predictions.json
     renderTable();        // Draw the table
     updateStats();        // Update sidebar numbers
 }
@@ -288,136 +284,13 @@ function showView(viewName) {
         }
         
         // Load data when switching to specific views
-        if (viewName === 'inventory-log') {
-            renderLogTable();
-        } else if (viewName === 'predictions') {
-            renderPredictions();
-        }
+        // (No specific data loading needed for current views)
     }
 }
 
 // Update the counters in the sidebar
 function updateStats() {
     document.getElementById('total-count').innerText = inventory.length;
-}
-
-// --- LOAD USAGE LOGS FROM JSON ---
-function loadUsageLogs() {
-    // Try to fetch logs.json file
-    fetch('logs.json')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('logs.json not found');
-            }
-            return response.json();
-        })
-        .then(data => {
-            usageLogs = data.logs || [];
-            if (document.getElementById('inventory-log-view') && !document.getElementById('inventory-log-view').classList.contains('hidden')) {
-                renderLogTable();
-            }
-        })
-        .catch(error => {
-            console.log('Could not load logs.json. Using empty array.');
-            usageLogs = [];
-        });
-}
-
-// --- RENDER INVENTORY LOG TABLE ---
-function renderLogTable() {
-    const tbody = document.getElementById('log-table-body');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
-    
-    if (usageLogs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 30px;">No log entries found. Data will appear here when items are detected by the camera system.</td></tr>';
-        return;
-    }
-    
-    // Sort by timestamp (newest first)
-    const sortedLogs = [...usageLogs].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    
-    sortedLogs.forEach(log => {
-        const row = `
-            <tr>
-                <td>${formatTimestamp(log.timestamp)}</td>
-                <td class="med-name">${log.itemName}</td>
-                <td style="font-family:'Space Mono'">-${log.quantityRemoved}</td>
-                <td>${log.user}</td>
-                <td>${log.location || 'ISS Module'}</td>
-            </tr>
-        `;
-        tbody.innerHTML += row;
-    });
-}
-
-// --- LOAD PREDICTIONS FROM JSON ---
-function loadPredictions() {
-    // Try to fetch predictions.json file
-    fetch('predictions.json')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('predictions.json not found');
-            }
-            return response.json();
-        })
-        .then(data => {
-            predictions = data.predictions || [];
-            if (document.getElementById('predictions-view') && !document.getElementById('predictions-view').classList.contains('hidden')) {
-                renderPredictions();
-            }
-        })
-        .catch(error => {
-            console.log('Could not load predictions.json. Using empty array.');
-            predictions = [];
-        });
-}
-
-// --- RENDER PREDICTIONS PANEL ---
-function renderPredictions() {
-    const container = document.getElementById('predictions-container');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    if (predictions.length === 0) {
-        container.innerHTML = '<div class="prediction-card"><p style="text-align: center; padding: 30px;">No predictions available. AI model will generate forecasts based on usage patterns.</p></div>';
-        return;
-    }
-    
-    // Sort by days until depletion (most urgent first)
-    const sortedPredictions = [...predictions].sort((a, b) => a.daysUntilDepletion - b.daysUntilDepletion);
-    
-    sortedPredictions.forEach(pred => {
-        // Determine urgency level
-        let urgencyClass = 'prediction-ok';
-        let urgencyLabel = 'NORMAL';
-        if (pred.daysUntilDepletion < 7) {
-            urgencyClass = 'prediction-crit';
-            urgencyLabel = 'CRITICAL';
-        } else if (pred.daysUntilDepletion < 30) {
-            urgencyClass = 'prediction-warn';
-            urgencyLabel = 'WARNING';
-        }
-        
-        const card = `
-            <div class="prediction-card ${urgencyClass}">
-                <div class="prediction-header">
-                    <h3>${pred.itemName}</h3>
-                    <span class="urgency-badge ${urgencyClass}">${urgencyLabel}</span>
-                </div>
-                <div class="prediction-details">
-                    <p><strong>Current Stock:</strong> ${pred.currentStock} units</p>
-                    <p><strong>Predicted Depletion:</strong> ${pred.daysUntilDepletion} days</p>
-                    <p><strong>Estimated Date:</strong> ${formatDate(pred.estimatedDepletionDate)}</p>
-                    <p><strong>Usage Rate:</strong> ${pred.usageRate} units/day</p>
-                    <p class="prediction-note">${pred.recommendation || 'Monitor closely'}</p>
-                </div>
-            </div>
-        `;
-        container.innerHTML += card;
-    });
 }
 
 // --- HELPER FUNCTIONS ---
@@ -475,13 +348,35 @@ function syncWithBackend() {
         const medCSV = exportMedicationsToCSV(inventory);
         downloadCSV(medCSV, 'medications.csv');
         
-        // 2. Export Usage Logs (if we had them tracked separately)
-        // For now, we will just export a sample log based on inventory
-        // In a real app, we would track 'usageLogs' array.
+        // 2. Export Usage Logs (Empty for now)
         const logCSV = exportLogsToCSV([]); 
         downloadCSV(logCSV, 'adherence_logs.csv');
         
         alert('Files generated. Please place them in the C++ application folder.');
     }
+}
+
+function exportMedicationsToCSV(data) {
+    let csv = "Name,Dosage,Quantity,Expiry,Lot\n";
+    data.forEach(item => {
+        csv += `${item.name},${item.dosage},${item.qty},${item.expiry},${item.lot}\n`;
+    });
+    return csv;
+}
+
+function exportLogsToCSV(data) {
+    let csv = "Timestamp,ItemName,QuantityRemoved,User,Location\n";
+    // If we had logs, we would loop here
+    return csv;
+}
+
+function downloadCSV(content, fileName) {
+    const blob = new Blob([content], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
 }
 
