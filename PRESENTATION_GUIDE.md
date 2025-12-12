@@ -11,7 +11,7 @@
 ### 1. **Login System** (Simple Security)
 **What to say:**
 - "We implemented basic authentication to protect the system"
-- "The password is hardcoded for prototype demonstration: `nasa2024`"
+- "The password is hardcoded for prototype demonstration: `67`"
 - "In production, this would connect to a database"
 
 **How it works:**
@@ -103,7 +103,7 @@
 ## **Common Questions & Answers**
 
 **Q: "How does authentication work?"**
-A: "Simple password check in JavaScript. For prototype, password is `nasa2024`. In production, we'd use a database."
+A: "Simple password check in JavaScript. For prototype, password is `67`. In production, we'd use a database."
 
 **Q: "Where does the data come from?"**
 A: "Currently from JSON files that simulate what the Jetson Nano would write. The camera system would detect item removal and log it to `logs.json` on the SD card."
