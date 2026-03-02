@@ -427,36 +427,6 @@ label {
 .status-offline { color: var(--alert-red); font-weight: bold; }
 .status-active  { color: var(--highlight-cyan); }
 
-/* --- LOGIN: BIOMETRIC SECTION --- */
-.biometric-section {
-    margin-top: 25px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 20px;
-}
-
-.biometric-label {
-    font-size: 0.8rem;
-    color: #888;
-    margin-bottom: 15px;
-    letter-spacing: 1px;
-}
-
-.btn-face-id {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-}
-
-#face-id-status {
-    margin-top: 10px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.9rem;
-    color: var(--highlight-cyan);
-    min-height: 1.2em;
-}
-
 /* --- DASHBOARD --- */
 .inventory-section { margin-top: 30px; }
 

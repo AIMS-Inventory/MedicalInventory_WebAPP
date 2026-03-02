@@ -60,35 +60,6 @@ function handleLogin(event) {
     }
 }
 
-// --- FACE ID SIMULATION ---
-
-function simulateFaceID() {
-    const statusEl = document.getElementById('face-id-status');
-    const btn = document.querySelector('#login-view .btn-outline');
-    btn.disabled = true;
-    btn.style.opacity = "0.5";
-    statusEl.innerText = "Initializing Camera...";
-    statusEl.style.color = "#fff";
-
-    setTimeout(() => {
-        statusEl.innerText = "Scanning Face Pattern...";
-        statusEl.style.color = "var(--highlight-cyan)";
-        setTimeout(() => {
-            statusEl.innerText = "IDENTITY VERIFIED: COMMANDER";
-            statusEl.style.color = "var(--safe-green)";
-            setTimeout(() => {
-                isAuthenticated = true;
-                sessionStorage.setItem('astroMedAuth', 'true');
-                showApp();
-                initializeApp();
-                statusEl.innerText = "";
-                btn.disabled = false;
-                btn.style.opacity = "1";
-            }, 1000);
-        }, 1500);
-    }, 1000);
-}
-
 function logout() {
     if (confirm("Are you sure you want to logout?")) {
         isAuthenticated = false;
@@ -357,5 +328,4 @@ window.showView        = showView;
 window.filterShelves   = filterShelves;
 window.refreshData     = refreshData;
 window.saveSettings    = saveSettings;
-window.simulateFaceID  = simulateFaceID;
 window.clearShelf      = clearShelf;
