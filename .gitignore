@@ -1,0 +1,8 @@
+# Editor swap/temp files
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
