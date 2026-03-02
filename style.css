@@ -44,9 +44,13 @@ body {
 .login-box {
     background-color: var(--panel-color);
     padding: 40px;
-    border-radius: 8px;
-    border: 1px solid var(--highlight-cyan);
-    box-shadow: 0 0 20px rgba(102, 252, 241, 0.1);
+    box-shadow: 0 0 40px rgba(102, 252, 241, 0.12), inset 0 0 40px rgba(102, 252, 241, 0.04);
+    --aug-tl: 20px;
+    --aug-tr: 20px;
+    --aug-br: 20px;
+    --aug-bl: 20px;
+    --aug-border-bg: var(--highlight-cyan);
+    --aug-border-size: 1px;
 }
 
 .login-box h1 {
@@ -97,13 +101,14 @@ body {
     font-weight: bold;
     cursor: pointer;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.12em;
     font-family: 'Space Mono', monospace;
 }
 
 .btn-login:hover {
     background-color: var(--highlight-dark);
     color: white;
+    box-shadow: 0 0 12px rgba(102, 252, 241, 0.5);
 }
 
 .error-message {
@@ -125,7 +130,7 @@ body {
 .sidebar {
     width: 260px;
     background-color: #000000;
-    border-right: 1px solid #333;
+    border-right: 1px solid var(--highlight-dark);
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -159,7 +164,7 @@ body {
     margin-bottom: 10px;
     cursor: pointer;
     font-size: 16px;
-    transition: 0.3s; /* Smooth hover effect */
+    transition: 0.3s;
 }
 
 .nav-buttons button:hover {
@@ -211,14 +216,14 @@ body {
 main {
     flex-grow: 1;
     padding: 30px;
-    overflow-y: auto; /* Allow scrolling inside main area */
+    overflow-y: auto;
 }
 
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid var(--panel-color);
+    border-bottom: 1px solid var(--highlight-dark);
     padding-bottom: 20px;
     margin-bottom: 20px;
 }
@@ -250,19 +255,27 @@ input:focus, textarea:focus {
     color: var(--highlight-cyan);
     padding: 8px 16px;
     cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
     font-weight: bold;
 }
 
 .btn-outline:hover {
     background: var(--highlight-cyan);
     color: black;
+    box-shadow: 0 0 12px rgba(102, 252, 241, 0.5);
 }
 
 /* --- TABLE STYLES --- */
 .table-container {
     background-color: var(--panel-color);
-    border-radius: 8px;
-    overflow: hidden; /* Rounds the corners of the table */
+    overflow: hidden;
+    --aug-tl: 14px;
+    --aug-br: 14px;
+    --aug-border-bg: var(--highlight-dark);
+    --aug-border-size: 1px;
 }
 
 table {
@@ -318,9 +331,11 @@ tr:hover {
     cursor: pointer;
     font-size: 10px;
 }
+
 .btn-delete:hover {
     border-color: var(--alert-red);
     color: var(--alert-red);
+    box-shadow: 0 0 12px rgba(252, 92, 101, 0.4);
 }
 
 /* --- SCANNER VIEW --- */
@@ -336,7 +351,10 @@ tr:hover {
 .scan-box, .form-box {
     background-color: var(--panel-color);
     padding: 25px;
-    border-radius: 8px;
+    --aug-tl: 14px;
+    --aug-br: 14px;
+    --aug-border-bg: var(--highlight-dark);
+    --aug-border-size: 1px;
 }
 
 textarea {
@@ -361,12 +379,13 @@ textarea {
     cursor: pointer;
     font-weight: bold;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.12em;
 }
 
 .btn-action:hover {
     background-color: var(--highlight-cyan);
     color: black;
+    box-shadow: 0 0 12px rgba(102, 252, 241, 0.5);
 }
 
 /* Form Grid */
@@ -395,11 +414,12 @@ label {
     font-weight: bold;
     cursor: pointer;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.12em;
 }
 
 .btn-save:hover {
     background-color: #20bf6b;
+    box-shadow: 0 0 12px rgba(102, 252, 241, 0.5);
 }
 
 /* --- SIDEBAR STATUS --- */
@@ -445,7 +465,6 @@ label {
 /* --- ABOUT PAGE --- */
 .about-card {
     margin-bottom: 20px;
-    border-left: 4px solid var(--highlight-cyan);
 }
 
 .about-detail { margin-bottom: 15px; }
@@ -463,14 +482,14 @@ label {
 /* --- ERROR BANNER --- */
 .error-banner {
     background-color: rgba(252, 92, 101, 0.12);
-    border: 1px solid var(--alert-red);
-    border-radius: 6px;
     color: var(--alert-red);
     padding: 12px 18px;
     margin-bottom: 20px;
     font-family: 'Space Mono', monospace;
     font-size: 13px;
     line-height: 1.5;
+    --aug-border-bg: var(--alert-red);
+    --aug-border-size: 1px;
 }
 
 /* --- STATS CARDS --- */
@@ -483,12 +502,19 @@ label {
 
 .stat-card {
     background-color: var(--panel-color);
-    border-radius: 8px;
     padding: 18px 20px;
-    border-left: 3px solid var(--highlight-dark);
     display: flex;
     flex-direction: column;
     gap: 8px;
+    --aug-tl: 12px;
+    --aug-br: 12px;
+    --aug-border-bg: var(--highlight-dark);
+    --aug-border-size: 1px;
+    transition: --aug-border-bg 0.3s;
+}
+
+.stat-card:hover {
+    --aug-border-bg: var(--highlight-cyan);
 }
 
 .stat-label {
@@ -574,15 +600,15 @@ label {
     font-weight: bold;
     cursor: pointer;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.12em;
     font-family: 'Space Mono', monospace;
-    border-radius: 4px;
     white-space: nowrap;
 }
 
 .btn-save-settings:hover {
     background-color: var(--highlight-dark);
     color: white;
+    box-shadow: 0 0 12px rgba(102, 252, 241, 0.5);
 }
 
 .settings-status-text {
