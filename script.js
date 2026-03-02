@@ -3,27 +3,26 @@
 
 const CORRECT_PASSWORD = "67";
 let isAuthenticated = false;
-let inventory = [];
 
-window.onload = function() {
+// Live shelf data from backend
+let shelfData = [];
+
+// Backend base URL — persisted in localStorage
+function getBackendUrl() {
+    return localStorage.getItem('astroMedBackendUrl') || '';
+}
+
+window.onload = function () {
     checkAuth();
     if (isAuthenticated) {
         initializeApp();
-    }
-    const loginForm = document.getElementById('login-form');
-    if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            handleLogin(e);
-        });
     }
 };
 
 // --- AUTHENTICATION ---
 
 function checkAuth() {
-    const authStatus = sessionStorage.getItem('astroMedAuth');
-    if (authStatus === 'true') {
+    if (sessionStorage.getItem('astroMedAuth') === 'true') {
         isAuthenticated = true;
         showApp();
     } else {
@@ -43,14 +42,9 @@ function showApp() {
 
 function handleLogin(event) {
     if (event) event.preventDefault();
-
     const passwordInput = document.getElementById('password-input');
     const errorMsg = document.getElementById('login-error');
-
-    if (!passwordInput) {
-        alert('Error: Password input not found. Please refresh.');
-        return;
-    }
+    if (!passwordInput) return;
 
     if (passwordInput.value === CORRECT_PASSWORD) {
         isAuthenticated = true;
@@ -71,7 +65,6 @@ function handleLogin(event) {
 function simulateFaceID() {
     const statusEl = document.getElementById('face-id-status');
     const btn = document.querySelector('#login-view .btn-outline');
-
     btn.disabled = true;
     btn.style.opacity = "0.5";
     statusEl.innerText = "Initializing Camera...";
@@ -80,11 +73,9 @@ function simulateFaceID() {
     setTimeout(() => {
         statusEl.innerText = "Scanning Face Pattern...";
         statusEl.style.color = "var(--highlight-cyan)";
-
         setTimeout(() => {
             statusEl.innerText = "IDENTITY VERIFIED: COMMANDER";
             statusEl.style.color = "var(--safe-green)";
-
             setTimeout(() => {
                 isAuthenticated = true;
                 sessionStorage.setItem('astroMedAuth', 'true');
@@ -94,9 +85,7 @@ function simulateFaceID() {
                 btn.disabled = false;
                 btn.style.opacity = "1";
             }, 1000);
-
         }, 1500);
-
     }, 1000);
 }
 
@@ -110,134 +99,236 @@ function logout() {
     }
 }
 
+// --- INIT ---
+
 function initializeApp() {
-    loadData();
-    renderTable();
-    updateStats();
+    loadSettingsUI();
+    refreshData();
 }
 
-// --- DATA (localStorage) ---
+// --- SETTINGS ---
 
-function loadData() {
-    const storedData = localStorage.getItem('astroMedInventory');
-    if (storedData) {
-        inventory = JSON.parse(storedData);
-    } else {
-        inventory = [
-            { id: 1, name: 'Ibuprofen',   dosage: '200mg', qty: 150, expiry: '2027-05-15', lot: 'IB-99'  },
-            { id: 2, name: 'Epinephrine', dosage: '0.3mg', qty: 2,   expiry: '2024-12-01', lot: 'EPI-1'  },
-            { id: 3, name: 'Bandages',    dosage: 'N/A',   qty: 50,  expiry: '2030-01-01', lot: 'BND-5'  }
-        ];
-        saveData();
+function loadSettingsUI() {
+    const url = getBackendUrl();
+    if (url) {
+        try {
+            const u = new URL(url);
+            document.getElementById('setting-host').value = u.hostname;
+            document.getElementById('setting-port').value = u.port;
+        } catch (_) {}
+        document.getElementById('current-backend-url').textContent = url;
     }
 }
 
-function saveData() {
-    localStorage.setItem('astroMedInventory', JSON.stringify(inventory));
-    updateStats();
+function saveSettings() {
+    const host = document.getElementById('setting-host').value.trim();
+    const port = document.getElementById('setting-port').value.trim();
+    const statusEl = document.getElementById('settings-status');
+
+    if (!host || !port) {
+        statusEl.textContent = 'Please enter both host and port.';
+        statusEl.style.color = 'var(--alert-red)';
+        return;
+    }
+
+    const url = `http://${host}:${port}`;
+    localStorage.setItem('astroMedBackendUrl', url);
+    document.getElementById('current-backend-url').textContent = url;
+    statusEl.textContent = 'Saved. Connecting...';
+    statusEl.style.color = 'var(--highlight-cyan)';
+
+    refreshData().then(() => {
+        const health = document.getElementById('health-status').textContent;
+        if (health === 'ONLINE') {
+            statusEl.textContent = '✓ Connected successfully.';
+            statusEl.style.color = 'var(--safe-green)';
+        } else {
+            statusEl.textContent = '✗ Could not reach backend. Check host/port.';
+            statusEl.style.color = 'var(--alert-red)';
+        }
+    });
 }
 
-// --- SMART SCAN (OCR) ---
+// --- BACKEND FETCH ---
 
-function runExtraction() {
-    const rawText = document.getElementById('raw-text-input').value;
-    const btn = document.querySelector('.btn-action');
-    const statusMsg = document.getElementById('scan-status');
+async function fetchSystemHealth() {
+    const base = getBackendUrl();
+    const healthEl = document.getElementById('health-status');
+    const cardHealth = document.getElementById('card-health');
 
-    btn.innerHTML = "Scanning...";
-    btn.style.backgroundColor = "#999";
+    if (!base) {
+        setHealthOffline('Not configured');
+        return false;
+    }
 
-    setTimeout(() => {
-        // Regex patterns: date YYYY-MM-DD, quantity keyword, dosage unit, first line as name
-        const dateMatch = rawText.match(/(\d{4}-\d{2}-\d{2})/);
-        const qtyMatch  = rawText.match(/(?:Qty|Count|Quantity)[:\s]*(\d+)/i);
-        const doseMatch = rawText.match(/(\d+(?:\.\d+)?)\s?(mg|ml|mcg|g)/i);
-        const nameGuess = rawText.split('\n')[0]?.trim() || "";
-
-        if (dateMatch) document.getElementById('field-date').value    = dateMatch[0];
-        if (qtyMatch)  document.getElementById('field-qty').value     = qtyMatch[1];
-        if (doseMatch) document.getElementById('field-dosage').value  = doseMatch[0];
-        if (nameGuess) document.getElementById('field-name').value    = nameGuess;
-
-        btn.innerHTML = "Scan Text";
-        btn.style.backgroundColor = "";
-        statusMsg.innerText = "Scan complete.";
-        statusMsg.style.color = "var(--safe-green)";
-
-    }, 800);
-}
-
-// --- CRUD ---
-
-function saveItem(event) {
-    event.preventDefault();
-
-    const newItem = {
-        id:     Date.now(),
-        name:   document.getElementById('field-name').value,
-        dosage: document.getElementById('field-dosage').value,
-        qty:    parseInt(document.getElementById('field-qty').value),
-        expiry: document.getElementById('field-date').value,
-        lot:    document.getElementById('field-lot').value
-    };
-
-    inventory.unshift(newItem);
-    saveData();
-
-    document.getElementById('add-item-form').reset();
-    document.getElementById('raw-text-input').value = '';
-    document.getElementById('scan-status').innerText = '';
-
-    alert("Item saved.");
-    showView('dashboard');
-    renderTable();
-}
-
-function deleteItem(id) {
-    if (confirm("WARNING: Are you sure you want to remove this item?")) {
-        inventory = inventory.filter(item => item.id !== id);
-        saveData();
-        renderTable();
+    try {
+        const res = await fetch(`${base}/systemHealth`, { signal: AbortSignal.timeout(4000) });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        if (json.status === 'ok') {
+            healthEl.textContent = 'ONLINE';
+            healthEl.className = 'status-online';
+            if (cardHealth) { cardHealth.textContent = 'OK'; cardHealth.style.color = 'var(--safe-green)'; }
+            return true;
+        } else {
+            throw new Error('Bad status');
+        }
+    } catch (err) {
+        setHealthOffline('Unreachable');
+        return false;
     }
 }
 
-function filterInventory() {
-    renderTable(document.getElementById('search-bar').value.toLowerCase());
+function setHealthOffline(reason) {
+    const healthEl = document.getElementById('health-status');
+    const cardHealth = document.getElementById('card-health');
+    if (healthEl) { healthEl.textContent = 'OFFLINE'; healthEl.className = 'status-offline'; }
+    if (cardHealth) { cardHealth.textContent = reason; cardHealth.style.color = 'var(--alert-red)'; }
+}
+
+async function fetchShelves() {
+    const base = getBackendUrl();
+    if (!base) {
+        showError('Backend not configured. Go to Settings and enter the host and port.');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${base}/getShelves`, { signal: AbortSignal.timeout(5000) });
+        if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
+        const json = await res.json();
+        shelfData = json.shelves || [];
+        hideError();
+        renderShelfTable();
+        updateStats();
+    } catch (err) {
+        shelfData = [];
+        showError(`Failed to fetch shelf data: ${err.message}. Is the backend running at ${base}?`);
+        renderShelfTable();
+        updateStats();
+    }
+}
+
+// --- REFRESH ---
+
+async function refreshData() {
+    const btn = document.getElementById('btn-refresh');
+    if (btn) { btn.textContent = '⟳ Refreshing...'; btn.disabled = true; }
+
+    await fetchSystemHealth();
+    await fetchShelves();
+
+    if (btn) { btn.innerHTML = '&#8635; Refresh'; btn.disabled = false; }
+}
+
+// --- ERROR BANNER ---
+
+function showError(msg) {
+    const banner = document.getElementById('error-banner');
+    const text = document.getElementById('error-banner-text');
+    if (banner && text) {
+        text.textContent = '⚠ ' + msg;
+        banner.classList.remove('hidden');
+    }
+}
+
+function hideError() {
+    const banner = document.getElementById('error-banner');
+    if (banner) banner.classList.add('hidden');
 }
 
 // --- RENDER TABLE ---
 
-function renderTable(searchTerm = "") {
+function renderShelfTable(searchTerm = '') {
     const tbody = document.getElementById('inventory-table-body');
     tbody.innerHTML = '';
 
-    inventory.forEach(item => {
-        if (searchTerm && !item.name.toLowerCase().includes(searchTerm)) return;
+    const filtered = shelfData.filter(shelf => {
+        if (!searchTerm) return true;
+        const q = searchTerm.toLowerCase();
+        return (
+            shelf.tag?.toLowerCase().includes(q) ||
+            String(shelf.box_id).includes(q) ||
+            shelf.box_pretty_name?.toLowerCase().includes(q) ||
+            shelf.registrant?.toLowerCase().includes(q)
+        );
+    });
 
-        const today   = new Date();
-        const expDate = new Date(item.expiry);
-        let statusLabel = 'OK';
-        let statusClass = 'status-ok';
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="table-msg">${
+            shelfData.length === 0
+                ? 'No shelf data received. Check backend connection in Settings.'
+                : 'No results match your search.'
+        }</td></tr>`;
+        return;
+    }
 
-        if (expDate < today) {
-            statusLabel = 'EXPIRED';
-            statusClass = 'status-crit';
-        } else if (item.qty < 15) {
-            statusLabel = 'LOW STOCK';
-            statusClass = 'status-warn';
-        }
+    filtered.forEach(shelf => {
+        const occupied = shelf.box_id !== -1 && shelf.box_id !== null && shelf.box_id !== undefined;
+        const statusLabel = occupied ? 'OCCUPIED' : 'EMPTY';
+        const statusClass = occupied ? 'status-ok' : 'status-warn';
+        const boxIdDisplay = occupied ? shelf.box_id : '—';
+        const boxNameDisplay = (occupied && shelf.box_pretty_name) ? shelf.box_pretty_name : '—';
+        const registrantDisplay = (occupied && shelf.registrant) ? shelf.registrant : '—';
 
         tbody.innerHTML += `
             <tr>
-                <td class="med-name">${item.name}</td>
-                <td>${item.dosage}</td>
-                <td style="font-family:'Space Mono'">${item.qty}</td>
-                <td>${item.expiry}</td>
+                <td class="med-name">${shelf.tag ?? '—'}</td>
+                <td style="font-family:'Space Mono'">${boxIdDisplay}</td>
+                <td>${boxNameDisplay}</td>
+                <td>${registrantDisplay}</td>
                 <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
-                <td><button class="btn-delete" onclick="deleteItem(${item.id})">REMOVE</button></td>
+                <td>${occupied
+                    ? `<button class="btn-delete" onclick="clearShelf('${shelf.tag}')">CLEAR</button>`
+                    : '—'
+                }</td>
             </tr>
         `;
     });
+}
+
+function filterShelves() {
+    renderShelfTable(document.getElementById('search-bar').value.toLowerCase());
+}
+
+// --- STATS ---
+
+function updateStats() {
+    const total = shelfData.length;
+    const occupied = shelfData.filter(s => s.box_id !== -1 && s.box_id !== null && s.box_id !== undefined).length;
+    const empty = total - occupied;
+
+    document.getElementById('total-shelves').textContent = total || '—';
+    document.getElementById('boxes-on-shelves').textContent = occupied || '—';
+    document.getElementById('card-total-shelves').textContent = total || '—';
+    document.getElementById('card-occupied').textContent = occupied || '—';
+    document.getElementById('card-empty').textContent = empty || '—';
+}
+
+// --- CLEAR SHELF ---
+
+async function clearShelf(shelfTag) {
+    if (!confirm(`Clear shelf "${shelfTag}"?\nThis will remove the box record from this shelf.`)) return;
+
+    const base = getBackendUrl();
+    if (!base) {
+        showError('Backend not configured. Go to Settings and enter the host and port.');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${base}/clearShelf?shelf_id=${encodeURIComponent(shelfTag)}`, {
+            method: 'DELETE',
+            signal: AbortSignal.timeout(5000)
+        });
+        if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
+        const json = await res.json();
+        if (json.status !== 'ok') throw new Error('Unexpected response from server.');
+        hideError();
+        await fetchShelves(); // refresh table after clearing
+    } catch (err) {
+        showError(`Failed to clear shelf "${shelfTag}": ${err.message}`);
+    }
 }
 
 // --- NAVIGATION ---
@@ -259,48 +350,12 @@ function showView(viewName) {
     }
 }
 
-function updateStats() {
-    document.getElementById('total-count').innerText = inventory.length;
-}
-
-// --- EXPORT ---
-
-function exportCSV() {
-    let csv = "Name,Dosage,Quantity,Expiry,Lot\n";
-    inventory.forEach(item => {
-        csv += `${item.name},${item.dosage},${item.qty},${item.expiry},${item.lot}\n`;
-    });
-    const a = Object.assign(document.createElement('a'), {
-        href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })),
-        download: 'Mission_Inventory_Report.csv'
-    });
-    a.click();
-}
-
-// --- BACKEND SYNC ---
-
-function syncWithBackend() {
-    if (confirm('Generate CSV file for C++ AI Backend?')) {
-        let csv = "Name,Dosage,Quantity,Expiry,Lot\n";
-        inventory.forEach(item => {
-            csv += `${item.name},${item.dosage},${item.qty},${item.expiry},${item.lot}\n`;
-        });
-        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-        const a = Object.assign(document.createElement('a'), { href: url, download: 'medications.csv' });
-        a.click();
-        URL.revokeObjectURL(url);
-        alert('File generated. Place it in the C++ application folder.');
-    }
-}
-
 // Global exports for inline HTML event handlers
-window.handleLogin    = handleLogin;
-window.logout         = logout;
-window.showView       = showView;
-window.deleteItem     = deleteItem;
-window.filterInventory = filterInventory;
-window.runExtraction  = runExtraction;
-window.saveItem       = saveItem;
-window.exportCSV      = exportCSV;
-window.simulateFaceID = simulateFaceID;
-window.syncWithBackend = syncWithBackend;
+window.handleLogin     = handleLogin;
+window.logout          = logout;
+window.showView        = showView;
+window.filterShelves   = filterShelves;
+window.refreshData     = refreshData;
+window.saveSettings    = saveSettings;
+window.simulateFaceID  = simulateFaceID;
+window.clearShelf      = clearShelf;

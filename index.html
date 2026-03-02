@@ -47,15 +47,15 @@
 
             <div class="nav-buttons">
                 <button onclick="showView('dashboard')" id="btn-dashboard" class="active">Dashboard</button>
-                <button onclick="showView('scanner')" id="btn-scanner">Smart Scan (OCR)</button>
                 <button onclick="showView('about')" id="btn-about">About Us</button>
+                <button onclick="showView('settings')" id="btn-settings">Settings</button>
             </div>
 
             <div class="status-panel">
                 <h3>System Status</h3>
-                <p>Network: <span class="status-online">ONLINE</span></p>
-                <p>Total Items: <span id="total-count">0</span></p>
-                <p>Camera: <span class="status-active">ACTIVE</span></p>
+                <p>Backend: <span id="health-status" class="status-offline">OFFLINE</span></p>
+                <p>Total Shelves: <span id="total-shelves">—</span></p>
+                <p>Boxes on Shelves: <span id="boxes-on-shelves">—</span></p>
                 <button onclick="logout()" class="btn-logout">LOGOUT</button>
                 <p class="small-note">Prototype v1.0</p>
             </div>
@@ -66,81 +66,58 @@
             <!-- Dashboard -->
             <section id="dashboard-view" class="view-section">
                 <header>
-                    <h2>Dashboard</h2>
+                    <h2>Shelf Inventory</h2>
                     <div class="controls">
-                        <input type="text" id="search-bar" placeholder="Search Meds (e.g., Amox...)" onkeyup="filterInventory()">
-                        <button onclick="exportCSV()" class="btn-outline">Download Report (.CSV)</button>
-                        <button onclick="syncWithBackend()" class="btn-outline">Sync with AI</button>
+                        <input type="text" id="search-bar" placeholder="Search shelf or box..." onkeyup="filterShelves()">
+                        <button onclick="refreshData()" id="btn-refresh" class="btn-outline">&#8635; Refresh</button>
                     </div>
                 </header>
 
+                <!-- Error Banner -->
+                <div id="error-banner" class="error-banner hidden">
+                    <span id="error-banner-text"></span>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <p class="stat-label">Total Shelves</p>
+                        <p class="stat-value" id="card-total-shelves">—</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-label">Occupied</p>
+                        <p class="stat-value" id="card-occupied">—</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-label">Empty</p>
+                        <p class="stat-value" id="card-empty">—</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-label">Backend Health</p>
+                        <p class="stat-value" id="card-health">—</p>
+                    </div>
+                </div>
+
                 <div class="inventory-section">
-                    <h3 class="inventory-title">Current Inventory</h3>
+                    <h3 class="inventory-title">Shelf Status</h3>
                     <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Medication Name</th>
-                                    <th>Dosage</th>
-                                    <th>Qty</th>
-                                    <th>Expiry Date</th>
+                                    <th>Shelf Tag</th>
+                                    <th>Box ID</th>
+                                    <th>Box Name</th>
+                                    <th>Registrant</th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
-                            <tbody id="inventory-table-body"></tbody>
+                            <tbody id="inventory-table-body">
+                                <tr id="table-placeholder">
+                                    <td colspan="6" class="table-msg">No data — configure backend in Settings and press Refresh.</td>
+                                </tr>
+                            </tbody>
                         </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Scanner -->
-            <section id="scanner-view" class="view-section hidden">
-                <header>
-                    <h2>Smart Scanner (OCR)</h2>
-                </header>
-
-                <div class="scanner-layout">
-                    <div class="scan-box">
-                        <h3>Input Text</h3>
-                        <p class="instruction">Paste label text below:</p>
-                        <textarea id="raw-text-input" placeholder="Example:&#10;Ibuprofen 200mg&#10;Exp: 2027-05-20&#10;Qty: 100"></textarea>
-                        <button onclick="runExtraction()" class="btn-action">Scan Text</button>
-                        <p id="scan-status" class="status-text"></p>
-                    </div>
-
-                    <div class="form-box">
-                        <h3>Verify Details</h3>
-                        <p class="instruction">Check data before saving.</p>
-
-                        <form id="add-item-form" onsubmit="saveItem(event)">
-                            <label>Medication Name</label>
-                            <input type="text" id="field-name" required>
-
-                            <div class="row">
-                                <div>
-                                    <label>Dosage</label>
-                                    <input type="text" id="field-dosage">
-                                </div>
-                                <div>
-                                    <label>Quantity</label>
-                                    <input type="number" id="field-qty" required>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div>
-                                    <label>Expiration Date</label>
-                                    <input type="date" id="field-date" required>
-                                </div>
-                                <div>
-                                    <label>Lot Number</label>
-                                    <input type="text" id="field-lot">
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn-save">Save Item</button>
-                        </form>
                     </div>
                 </div>
             </section>
@@ -175,6 +152,38 @@
 
                     <h4 class="about-subsection">Project Status</h4>
                     <p>Prototype v1.0 - Web Interface for Preliminary Design Review (PDR).</p>
+                </div>
+            </section>
+
+            <!-- Settings -->
+            <section id="settings-view" class="view-section hidden">
+                <header>
+                    <h2>Settings</h2>
+                </header>
+
+                <div class="scan-box settings-card">
+                    <h3>Backend Connection</h3>
+                    <p class="instruction">Enter the host and port of the C++ REST server (from <code>rest_host</code> / <code>rest_port</code> in its config).</p>
+
+                    <div class="settings-row">
+                        <div class="settings-field">
+                            <label for="setting-host">Host</label>
+                            <input type="text" id="setting-host" placeholder="e.g. 192.168.1.100">
+                        </div>
+                        <div class="settings-field settings-field-port">
+                            <label for="setting-port">Port</label>
+                            <input type="number" id="setting-port" placeholder="e.g. 8080">
+                        </div>
+                    </div>
+
+                    <div class="settings-actions">
+                        <button onclick="saveSettings()" class="btn-save-settings">SAVE &amp; CONNECT</button>
+                        <span id="settings-status" class="settings-status-text"></span>
+                    </div>
+
+                    <div class="settings-current">
+                        <p>Current backend: <code id="current-backend-url">Not configured</code></p>
+                    </div>
                 </div>
             </section>
 
