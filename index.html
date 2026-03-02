@@ -40,6 +40,7 @@
 
             <div class="nav-buttons">
                 <button onclick="showView('dashboard')" id="btn-dashboard" class="active">Dashboard</button>
+                <button onclick="showView('logs')" id="btn-logs">System Logs</button>
                 <button onclick="showView('about')" id="btn-about">About Us</button>
                 <button onclick="showView('settings')" id="btn-settings">Settings</button>
             </div>
@@ -112,6 +113,22 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </section>
+
+            <!-- Logs -->
+            <section id="logs-view" class="view-section hidden">
+                <header>
+                    <h2>System Audit Logs</h2>
+                    <div class="controls">
+                        <button onclick="refreshData()" class="btn-outline">&#8635; Refresh</button>
+                    </div>
+                </header>
+
+                <div class="logs-container" data-augmented-ui="tl-clip br-clip border">
+                    <ul id="audit-log-list" class="log-list">
+                        <li class="log-entry table-msg">Loading logs...</li>
+                    </ul>
                 </div>
             </section>
 

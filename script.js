@@ -6,6 +6,8 @@ let isAuthenticated = false;
 
 // Live shelf data from backend
 let shelfData = [];
+// Live audit logs from backend
+let auditLogs = [];
 
 // Backend base URL — persisted in localStorage
 function getBackendUrl() {
@@ -180,6 +182,47 @@ async function fetchShelves() {
     }
 }
 
+async function fetchAuditLogs() {
+    const base = getBackendUrl();
+    if (!base) return;
+
+    try {
+        const res = await fetch(`${base}/getAuditLog`, { signal: AbortSignal.timeout(5000) });
+        if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
+        const json = await res.json();
+        auditLogs = json.entries || [];
+        renderLogs();
+    } catch (err) {
+        auditLogs = [];
+        console.error("Failed to fetch logs:", err);
+        renderLogs(true);
+    }
+}
+
+function renderLogs(error = false) {
+    const list = document.getElementById('audit-log-list');
+    if (!list) return;
+
+    list.innerHTML = '';
+    if (error) {
+        list.innerHTML = `<li class="log-entry error-msg">Failed to load logs.</li>`;
+        return;
+    }
+    
+    if (auditLogs.length === 0) {
+        list.innerHTML = `<li class="log-entry table-msg">No entries found.</li>`;
+        return;
+    }
+
+    auditLogs.forEach(entry => {
+        const li = document.createElement('li');
+        li.className = 'log-entry';
+        li.textContent = entry;
+        list.appendChild(li);
+    });
+}
+
+
 // --- REFRESH ---
 
 async function refreshData() {
@@ -187,7 +230,7 @@ async function refreshData() {
     if (btn) { btn.textContent = '⟳ Refreshing...'; btn.disabled = true; }
 
     await fetchSystemHealth();
-    await fetchShelves();
+    await Promise.all([fetchShelves(), fetchAuditLogs()]);
 
     if (btn) { btn.innerHTML = '&#8635; Refresh'; btn.disabled = false; }
 }
