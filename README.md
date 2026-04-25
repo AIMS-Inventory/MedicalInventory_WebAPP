@@ -1,27 +1,36 @@
-# AstroMed — Visual Inventory Tracking System
-**NASA HUNCH | PCTI STEM — Team Lakind**
+# AstroMed - Visual Inventory Tracking System
 
 ## Overview
-A browser-based interface for the Jetson Nano Visual Inventory Tracking System. Allows crew to monitor medical supply status, scan item labels using OCR pattern matching, and export inventory data to the C++ AI backend.
+AstroMed is a browser interface for viewing shelf inventory and audit activity from the kiosk/backend stack.
 
-## Features
-- **Login** — Password authentication with a simulated biometric (Face Recognition) placeholder
-- **Dashboard** — Live medical inventory table with EXPIRED and LOW STOCK status alerts, search, and CSV export
-- **Smart Scan (OCR)** — Paste label text to auto-extract medication name, dosage, quantity, and expiry date via regex
-- **About** — Team information and system architecture overview
+The Settings page is the connection bridge between this web app and the kiosk/backend service, using host and port configuration persisted in localStorage.
 
-## Prototype Authentication Notice
-- The browser login/password in this prototype is UI-only and is not a security boundary.
-- For ISS kiosk/websocket architecture, authentication and authorization must be enforced in the backend services (REST/WebSocket) before any shelf or audit-log operation is accepted.
-- Deployments should include authenticated sessions/tokens, role checks, and server-side request validation.
+## Current Features
+- Login screen for prototype access flow
+- Dashboard with live shelf inventory table
+- Stats cards (total, occupied, empty, backend health)
+- System Logs view for audit entries
+- Settings page for backend host/port connection
 
-## How to Run
-Open `index.html` in any modern browser. No installation required.
+## Run Locally
+1. Open `index.html` directly, or
+2. Serve the folder with a local static server (recommended):
+
+```bash
+python3 -m http.server 5500
+```
+
+Then open `http://127.0.0.1:5500/index.html`.
 
 Default password: `67`
 
-## Tech Stack
-- **Frontend:** HTML5, CSS3, Vanilla JavaScript
-- **Storage:** Browser localStorage (JSON)
-- **Backend Sync:** CSV export → C++ AI backend on Jetson Nano
-- **Target Hardware:** NVIDIA Jetson Nano
+## Architecture Notes
+- Frontend: HTML, CSS, vanilla JavaScript
+- Backend integration: REST endpoints configured through Settings
+- Connection configuration: localStorage key `astroMedBackendUrl`
+
+## Design Principles
+- Keep interaction functional and immediate (no decorative typing delays)
+- Use one primary accent color consistently
+- Reserve strong visual effects for key hero components only
+- Keep supporting UI clean and readable for operations use
