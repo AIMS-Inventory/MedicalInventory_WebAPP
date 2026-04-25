@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NASA HUNCH: Visual Inventory Tracking System</title>
     <link rel="stylesheet" href="style.css?v=20260425c">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/augmented-ui@2/augmented-ui.min.css">
 </head>
 <body>
+
+    <div id="beam-bg" aria-hidden="true"></div>
 
     <!-- LOGIN -->
     <section id="login-view">
@@ -20,7 +22,9 @@
 
                 <form id="login-form" onsubmit="handleLogin(event); return false;">
                     <label>Enter Access Password</label>
-                    <input type="password" id="password-input" placeholder="Password" required autofocus>
+                    <div class="textInputWrapper">
+                        <input placeholder="PASSWORD" type="password" class="textInput" id="password-input" name="password" required autofocus>
+                    </div>
                     <button type="submit" class="btn-login">AUTHENTICATE</button>
                     <p id="login-error" class="error-message"></p>
                 </form>
@@ -164,6 +168,87 @@
         </main>
     </div>
 
-    <script src="script.js?v=20260425c"></script>
+        <script src="script.js?v=20260425c"></script>
+        <script>
+        (function() {
+            const bg = document.getElementById('beam-bg');
+            if (!bg) return;
+
+            Object.assign(bg.style, {
+                position: 'fixed',
+                top: '0',
+                left: '-10vw',
+                width: '120vw',
+                height: '100vh',
+                zIndex: '-1',
+                pointerEvents: 'none',
+                overflow: 'hidden'
+            });
+
+            document.body.style.background =
+                'radial-gradient(ellipse 100% 80% at 50% 0%, #061824 0%, #030d14 55%, #020a10 100%)';
+
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes meteor {
+                    0%   { top: -10%; opacity: 0; }
+                    5%   { opacity: 1; }
+                    95%  { opacity: 1; }
+                    100% { top: 110%; opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+
+            function buildColumns() {
+                bg.innerHTML = '';
+                const cellSize = 40;
+                const count = Math.ceil((window.innerWidth * 1.25) / cellSize) + 4;
+
+                for (let i = 0; i < count; i++) {
+                    const col = document.createElement('div');
+                    Object.assign(col.style, {
+                        position: 'absolute',
+                        top: '0',
+                        left: `${i * cellSize}px`,
+                        width: '1px',
+                        height: '100%',
+                        background: 'rgba(0, 255, 229, 0.05)',
+                        transform: 'rotate(12deg)',
+                        transformOrigin: 'top center'
+                    });
+
+                    if ((i + 1) % 4 === 0) {
+                        const isFlag = i % 8 === 0;
+                        const duration = isFlag ? 7 : 11;
+                        const delay = (i * 0.5) % 8;
+                        const height = isFlag ? '32px' : '48px';
+
+                        const beam = document.createElement('div');
+                        Object.assign(beam.style, {
+                            position: 'absolute',
+                            left: '-3px',
+                            width: '6px',
+                            height: height,
+                            clipPath: 'polygon(54% 0, 54% 0, 60% 100%, 40% 100%)',
+                            background: 'linear-gradient(to bottom, rgba(0,255,229,0.7) 0%, rgba(0,255,229,0.15) 100%)',
+                            animation: `meteor ${duration}s ${delay}s ease-in-out infinite`
+                        });
+
+                        col.appendChild(beam);
+                    }
+
+                    bg.appendChild(col);
+                }
+            }
+
+            buildColumns();
+
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(buildColumns, 150);
+            });
+        })();
+        </script>
 </body>
 </html>

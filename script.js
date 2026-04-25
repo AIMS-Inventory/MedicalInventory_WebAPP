@@ -15,6 +15,7 @@ function getBackendUrl() {
 }
 
 window.onload = function () {
+    initializeLoginBeamBackground();
     checkAuth();
     if (isAuthenticated) {
         initializeApp();
@@ -94,6 +95,10 @@ function loadSettingsUI() {
 }
 
 function saveSettings() {
+    return saveSettingsAsync();
+}
+
+async function saveSettingsAsync() {
     const host = document.getElementById('setting-host').value.trim();
     const port = document.getElementById('setting-port').value.trim();
     const statusEl = document.getElementById('settings-status');
@@ -110,14 +115,58 @@ function saveSettings() {
     statusEl.textContent = 'Saved. Connecting...';
     statusEl.style.color = 'var(--highlight-cyan)';
 
-    refreshData().then(() => {
-        const health = document.getElementById('health-status').textContent;
-        if (health === 'ONLINE') {
-            statusEl.textContent = '✓ Connected successfully.';
-            statusEl.style.color = 'var(--safe-green)';
-        } else {
-            statusEl.textContent = '✗ Could not reach backend. Check host/port.';
-            statusEl.style.color = 'var(--alert-red)';
+    try {
+        const verifyRes = await fetch(`${url}/systemHealth`, { signal: AbortSignal.timeout(5000) });
+        if (!verifyRes.ok) throw new Error(`HTTP ${verifyRes.status}`);
+        const verifyJson = await verifyRes.json();
+        if (verifyJson.status !== 'ok') throw new Error('Bad backend status');
+
+        statusEl.textContent = '✓ Connected successfully.';
+        statusEl.style.color = 'var(--safe-green)';
+
+        try {
+            await runBackendConnectScan();
+        } catch (_) {
+            // Failsafe: continue directly to dashboard load if animation fails.
+        }
+
+        showView('dashboard');
+        await refreshData();
+    } catch (err) {
+        setHealthOffline('Unreachable');
+        statusEl.textContent = '✗ Could not reach backend. Check host/port.';
+        statusEl.style.color = 'var(--alert-red)';
+    }
+}
+
+function runBackendConnectScan() {
+    return new Promise((resolve, reject) => {
+        try {
+            const existing = document.getElementById('backend-scan-overlay');
+            if (existing) existing.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'backend-scan-overlay';
+            overlay.className = 'backend-scan-overlay';
+
+            const panel = document.createElement('div');
+            panel.className = 'backend-scan-panel';
+            panel.innerHTML = `
+                <div class="backend-scan-title">ESTABLISHING BACKEND CONNECTION... SCANNING</div>
+                <div class="backend-scan-track">
+                    <div class="backend-scan-bar"></div>
+                </div>
+            `;
+
+            overlay.appendChild(panel);
+            document.body.appendChild(overlay);
+
+            window.setTimeout(() => {
+                overlay.remove();
+                resolve();
+            }, 1900);
+        } catch (err) {
+            reject(err);
         }
     });
 }
@@ -277,56 +326,96 @@ function renderShelfTable(searchTerm = '') {
         return;
     }
 
-    filtered.forEach(shelf => {
+    filtered.forEach((shelf, index) => {
         const occupied = shelf.box_id !== -1 && shelf.box_id !== null && shelf.box_id !== undefined;
-        const statusLabel = occupied ? 'OCCUPIED' : 'EMPTY';
-        const statusClass = occupied ? 'status-ok' : 'status-warn';
+        const statusLabel = occupied ? 'OCCUPIED' : 'STANDBY';
+        const statusColor = occupied ? 'var(--safe-green, var(--accent))' : 'var(--warn-yellow, var(--accent-dim))';
         const boxIdDisplay = occupied ? String(shelf.box_id) : '—';
         const boxNameDisplay = (occupied && shelf.box_pretty_name) ? shelf.box_pretty_name : '—';
         const registrantDisplay = (occupied && shelf.registrant) ? shelf.registrant : '—';
 
-        const row = document.createElement('tr');
+        const shelfTag = String(shelf.tag ?? `shelf-${index + 1}`);
+        const detailId = `detail-${shelfTag}`.replace(/[^a-zA-Z0-9_-]/g, '-');
 
-        const tagCell = document.createElement('td');
-        tagCell.className = 'med-name';
-        tagCell.textContent = shelf.tag ?? '—';
+        const mainRow = document.createElement('tr');
+        mainRow.className = 'shelf-row';
+        mainRow.innerHTML = `
+            <td class="med-name"><span class="expand-indicator">[+]</span>${shelfTag}</td>
+            <td style="font-family: 'Space Mono', monospace;">${boxIdDisplay}</td>
+            <td>${boxNameDisplay}</td>
+            <td>${registrantDisplay}</td>
+            <td style="color: ${statusColor}; font-family: 'Space Mono', monospace;">${statusLabel}</td>
+            <td>${occupied ? '<button class="btn-delete" type="button">CLEAR</button>' : '—'}</td>
+        `;
 
-        const boxIdCell = document.createElement('td');
-        boxIdCell.style.fontFamily = "'Space Mono'";
-        boxIdCell.textContent = boxIdDisplay;
+        const detailRow = document.createElement('tr');
+        detailRow.className = 'shelf-detail-row';
+        detailRow.id = detailId;
+        detailRow.innerHTML = `
+            <td colspan="6" style="padding: 0;">
+                <div class="detail-grid">
+                    <div class="detail-data-block">CONTENTS:<span>${shelf.box_pretty_name || shelf.contents || 'N/A'}</span></div>
+                    <div class="detail-data-block">LAST SCANNED:<span>${shelf.last_scan_time || '--:--:--'}</span></div>
+                    <div class="detail-data-block">SYS NOTES:<span>${shelf.notes || 'NOMINAL'}</span></div>
+                </div>
+            </td>
+        `;
 
-        const boxNameCell = document.createElement('td');
-        boxNameCell.textContent = boxNameDisplay;
-
-        const registrantCell = document.createElement('td');
-        registrantCell.textContent = registrantDisplay;
-
-        const statusCell = document.createElement('td');
-        const statusBadge = document.createElement('span');
-        statusBadge.className = `status-badge ${statusClass}`;
-        statusBadge.textContent = statusLabel;
-        statusCell.appendChild(statusBadge);
-
-        const actionCell = document.createElement('td');
-        if (occupied) {
-            const clearButton = document.createElement('button');
-            clearButton.type = 'button';
-            clearButton.className = 'btn-delete';
-            clearButton.textContent = 'CLEAR';
-            clearButton.addEventListener('click', () => clearShelf(String(shelf.tag ?? '')));
-            actionCell.appendChild(clearButton);
-        } else {
-            actionCell.textContent = '—';
+        const clearButton = mainRow.querySelector('.btn-delete');
+        if (clearButton && occupied) {
+            clearButton.onclick = (event) => {
+                event.stopPropagation();
+                clearShelf(shelfTag);
+            };
         }
 
-        row.appendChild(tagCell);
-        row.appendChild(boxIdCell);
-        row.appendChild(boxNameCell);
-        row.appendChild(registrantCell);
-        row.appendChild(statusCell);
-        row.appendChild(actionCell);
-        tbody.appendChild(row);
+        mainRow.onclick = () => {
+            const indicator = mainRow.querySelector('.expand-indicator');
+            const isOpen = detailRow.classList.toggle('is-open');
+            if (indicator) {
+                indicator.textContent = isOpen ? '[–]' : '[+]';
+            }
+        };
+        tbody.appendChild(mainRow);
+        tbody.appendChild(detailRow);
     });
+}
+
+function initializeLoginBeamBackground() {
+    const bg = document.getElementById('login-beam-bg');
+    if (!bg) return;
+
+    const rebuild = () => {
+        bg.innerHTML = '';
+
+        const columnsWrap = document.createElement('div');
+        columnsWrap.className = 'beam-columns';
+
+        const columnSpacing = 40;
+        const columnCount = Math.ceil(window.innerWidth / columnSpacing) + 8;
+
+        for (let index = 0; index < columnCount; index += 1) {
+            const column = document.createElement('div');
+            column.className = 'beam-column';
+            column.style.left = `${index * columnSpacing}px`;
+
+            if (index % 4 === 0) {
+                const beam = document.createElement('div');
+                beam.className = 'beam-fall';
+                beam.style.height = index % 8 === 0 ? '32px' : '48px';
+                beam.style.animationDuration = index % 8 === 0 ? '7s' : '11s';
+                beam.style.animationDelay = `${index * 0.5}s`;
+                column.appendChild(beam);
+            }
+
+            columnsWrap.appendChild(column);
+        }
+
+        bg.appendChild(columnsWrap);
+    };
+
+    rebuild();
+    window.addEventListener('resize', rebuild);
 }
 
 function filterShelves() {
