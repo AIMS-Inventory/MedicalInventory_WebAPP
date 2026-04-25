@@ -16,7 +16,7 @@
             <div class="login-box" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
                 <h1>ASTRO<span class="highlight">MED</span></h1>
                 <h2>Visual Inventory Tracking System</h2>
-                <p class="login-subtitle">PCTI STEM • Team Lakind</p>
+                <p class="login-subtitle">Medical Inventory Interface</p>
 
                 <form id="login-form" onsubmit="handleLogin(event); return false;">
                     <label>Enter Access Password</label>
@@ -25,9 +25,7 @@
                     <p id="login-error" class="error-message"></p>
                 </form>
 
-                <p class="auth-prototype-notice">Prototype authentication only. Production ISS kiosk/websocket deployments require backend-enforced authentication and authorization.</p>
-
-                <p class="small-note">Jetson Nano Prototype v1.0</p>
+                <p class="small-note">Prototype v1.0</p>
             </div>
         </div>
     </section>
@@ -37,28 +35,26 @@
         <nav class="sidebar">
             <div class="brand">
                 <h1>ASTRO<span class="highlight">MED</span></h1>
-                <p>PCTI STEM | Team Lakind</p>
+                <p>Mission Inventory Console</p>
             </div>
 
             <div class="nav-buttons">
                 <button onclick="showView('dashboard')" id="btn-dashboard" class="active">Dashboard</button>
                 <button onclick="showView('logs')" id="btn-logs">System Logs</button>
-                <button onclick="showView('about')" id="btn-about">About Us</button>
                 <button onclick="showView('settings')" id="btn-settings">Settings</button>
             </div>
 
             <div class="status-panel">
                 <h3>System Status</h3>
                 <p>Backend: <span id="health-status" class="status-offline">OFFLINE</span></p>
-                <p>Total Shelves: <span id="total-shelves">—</span></p>
-                <p>Boxes on Shelves: <span id="boxes-on-shelves">—</span></p>
+                <p>Total Shelves: <span id="total-shelves">-</span></p>
+                <p>Boxes on Shelves: <span id="boxes-on-shelves">-</span></p>
                 <button onclick="logout()" class="btn-logout">LOGOUT</button>
                 <p class="small-note">Prototype v1.0</p>
             </div>
         </nav>
 
         <main>
-
             <!-- Dashboard -->
             <section id="dashboard-view" class="view-section">
                 <header>
@@ -78,19 +74,19 @@
                 <div class="stats-row">
                     <div class="stat-card" data-augmented-ui="tl-clip br-clip border">
                         <p class="stat-label">Total Shelves</p>
-                        <p class="stat-value" id="card-total-shelves">—</p>
+                        <p class="stat-value" id="card-total-shelves">-</p>
                     </div>
                     <div class="stat-card" data-augmented-ui="tl-clip br-clip border">
                         <p class="stat-label">Occupied</p>
-                        <p class="stat-value" id="card-occupied">—</p>
+                        <p class="stat-value" id="card-occupied">-</p>
                     </div>
                     <div class="stat-card" data-augmented-ui="tl-clip br-clip border">
                         <p class="stat-label">Empty</p>
-                        <p class="stat-value" id="card-empty">—</p>
+                        <p class="stat-value" id="card-empty">-</p>
                     </div>
                     <div class="stat-card" data-augmented-ui="tl-clip br-clip border">
                         <p class="stat-label">Backend Health</p>
-                        <p class="stat-value" id="card-health">—</p>
+                        <p class="stat-value" id="card-health">-</p>
                     </div>
                 </div>
 
@@ -110,7 +106,7 @@
                             </thead>
                             <tbody id="inventory-table-body">
                                 <tr id="table-placeholder">
-                                    <td colspan="6" class="table-msg">No data — configure backend in Settings and press Refresh.</td>
+                                    <td colspan="6" class="table-msg">No data - configure backend in Settings and press Refresh.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -131,39 +127,6 @@
                     <ul id="audit-log-list" class="log-list">
                         <li class="log-entry table-msg">Loading logs...</li>
                     </ul>
-                </div>
-            </section>
-
-            <!-- About -->
-            <section id="about-view" class="view-section hidden">
-                <header>
-                    <h2>About Us</h2>
-                </header>
-
-                <div class="scan-box about-card" data-augmented-ui="tl-clip br-clip border">
-                    <h3>Team Information</h3>
-                    <p><strong>School:</strong> PCTI STEM</p>
-                    <p><strong>Team Name:</strong> Team Lakind</p>
-                    <p><strong>Project:</strong> NASA HUNCH - Medical Inventory System</p>
-                    <p><strong>Version:</strong> Prototype v1.0</p>
-                </div>
-
-                <div class="scan-box" data-augmented-ui="tl-clip br-clip border">
-                    <h3>System Architecture</h3>
-                    <p class="about-detail"><strong>Platform:</strong> NVIDIA Jetson Nano</p>
-                    <p class="about-detail"><strong>Core Technology:</strong> Computer Vision (OpenCV) & AI</p>
-
-                    <h4 class="about-subsection">System Cycle</h4>
-                    <ol class="system-cycle">
-                        <li><strong>Initialization:</strong> System powers on and loads executable files from SD Card.</li>
-                        <li><strong>Input Acquisition:</strong> Camera stream initiates (cap->read).</li>
-                        <li><strong>Detection:</strong> OpenCV processes frames to locate visual markers.</li>
-                        <li><strong>Verification:</strong> System displays processed frames for visual confirmation.</li>
-                        <li><strong>Logging:</strong> Discrepancies are logged to SD Card for CDR/FDR reporting.</li>
-                    </ol>
-
-                    <h4 class="about-subsection">Project Status</h4>
-                    <p>Prototype v1.0 - Web Interface for Preliminary Design Review (PDR).</p>
                 </div>
             </section>
 
@@ -198,7 +161,6 @@
                     </div>
                 </div>
             </section>
-
         </main>
     </div>
 
