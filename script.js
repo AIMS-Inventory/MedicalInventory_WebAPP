@@ -9,6 +9,9 @@ let shelfData = [];
 let auditLogs = [];
 let currentReport = '';
 
+const STATUS_ICON_SPINNER = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.1 2.182a10 10 0 0 1 3.8 0"/><path d="M13.9 21.818a10 10 0 0 1-3.8 0"/><path d="M17.609 3.721a10 10 0 0 1 2.69 2.7"/><path d="M2.182 13.9a10 10 0 0 1 0-3.8"/><path d="M20.279 17.609a10 10 0 0 1-2.7 2.69"/><path d="M21.818 10.1a10 10 0 0 1 0 3.8"/><path d="M3.721 6.391a10 10 0 0 1 2.7-2.69"/><path d="M6.391 20.279a10 10 0 0 1-2.69-2.7"/></svg>';
+const STATUS_ICON_CHECK    = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="m9 12 2 2 4-4" fill="none" stroke="#031014" stroke-width="2.5"/></svg>';
+
 let socket = null;
 
 function getBackendUrl() {
@@ -183,6 +186,8 @@ function connectWebSocket(url) {
         if (healthEl) { healthEl.textContent = 'ONLINE'; healthEl.className = 'status-online'; }
         if (cardHealth) { cardHealth.textContent = 'OK'; cardHealth.style.color = 'var(--accent)'; }
         hideError();
+
+        fetchAuditLogs();
     };
 
     socket.onmessage = (event) => {
@@ -196,6 +201,11 @@ function connectWebSocket(url) {
                 shelfData = Array.isArray(data.shelf_info) ? data.shelf_info : Object.values(data.shelf_info);
                 renderShelfTable(document.getElementById('search-bar').value.toLowerCase());
                 updateStats();
+
+                if (data.audit_logs){
+                    auditLogs=data.audit_logs;
+                    renderLogs();
+                }
             }
 
             // Note: If C++ starts broadcasting logs in the future, handle them here.
@@ -221,6 +231,15 @@ function setHealthOffline(reason) {
     if (cardHealth) { cardHealth.textContent = reason; cardHealth.style.color = 'var(--danger)'; }
 }
 
+function fetchAuditLogs()
+{
+
+
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+
+    const payload = {event: "get_audit_logs"};
+    socket.send(JSON.stringify(payload));
+}
 
 function renderLogs(error = false) {
     const list = document.getElementById('audit-log-list');
@@ -245,14 +264,57 @@ function renderLogs(error = false) {
     });
 }
 
-async function refreshData() {
-    const btn = document.getElementById('btn-refresh');
-    if (btn) { btn.textContent = '⟳ Refreshing...'; btn.disabled = true; }
+function setButtonStatus(btn, state) {
+    if (!btn) return;
+    const inner = btn.querySelector('.btn-status-inner');
+    if (!inner) return;
 
-    await fetchSystemHealth();
-    await Promise.all([fetchShelves(), fetchAuditLogs()]);
+    inner.classList.add('is-exiting');
 
-    if (btn) { btn.innerHTML = '&#8635; Refresh'; btn.disabled = false; }
+    setTimeout(() => {
+        const iconEl  = inner.querySelector('.btn-status-icon');
+        const labelEl = inner.querySelector('.btn-status-label');
+
+        inner.classList.remove('is-exiting');
+        inner.classList.add('is-entering');
+        setTimeout(() => inner.classList.remove('is-entering'), 100);
+
+        if (state === 'loading') {
+            iconEl.innerHTML  = STATUS_ICON_SPINNER;
+            iconEl.className  = 'btn-status-icon is-spinning';
+            labelEl.textContent = 'Refreshing...';
+            btn.disabled = true;
+        } else if (state === 'done') {
+            iconEl.innerHTML  = STATUS_ICON_CHECK;
+            iconEl.className  = 'btn-status-icon is-check';
+            labelEl.textContent = 'Done';
+            btn.disabled = true;
+        } else {
+            iconEl.innerHTML  = '';
+            iconEl.className  = 'btn-status-icon';
+            labelEl.innerHTML = '&#8635; Refresh';
+            btn.disabled = false;
+        }
+    }, 80);
+}
+
+async function refreshData(buttonEl) {
+    const btn = buttonEl instanceof Element ? buttonEl : document.getElementById('btn-refresh');
+
+    setButtonStatus(btn, 'loading');
+
+    const url = getBackendUrl();
+    if (url) {
+        connectWebSocket(url);
+        await new Promise(r => setTimeout(r, 1400));
+        setButtonStatus(btn, 'done');
+        await new Promise(r => setTimeout(r, 1200));
+    } else {
+        showError("Backend URL not configured.");
+        await new Promise(r => setTimeout(r, 350));
+    }
+
+    setButtonStatus(btn, 'idle');
 }
 
 function showError(msg) {
@@ -546,3 +608,4 @@ window.saveSettings    = saveSettings;
 window.clearShelf      = clearShelf;
 window.generateReport  = generateReport;
 window.downloadReport  = downloadReport;
+window.fetchAuditLogs = fetchAuditLogs;

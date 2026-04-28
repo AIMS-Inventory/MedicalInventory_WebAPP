@@ -66,7 +66,12 @@
                     <h2>Shelf Inventory</h2>
                     <div class="controls">
                         <input type="text" id="search-bar" placeholder="Search shelf or box..." onkeyup="filterShelves()">
-                        <button onclick="refreshData()" id="btn-refresh" class="btn-outline">&#8635; Refresh</button>
+                        <button onclick="refreshData(this)" id="btn-refresh" class="btn-outline btn-status">
+                            <span class="btn-status-inner">
+                                <span class="btn-status-icon"></span>
+                                <span class="btn-status-label">&#8635; Refresh</span>
+                            </span>
+                        </button>
                     </div>
                 </header>
 
@@ -124,7 +129,12 @@
                 <header>
                     <h2>System Audit Logs</h2>
                     <div class="controls">
-                        <button onclick="refreshData()" class="btn-outline">&#8635; Refresh</button>
+                        <button onclick="refreshData(this)" class="btn-outline btn-status">
+                            <span class="btn-status-inner">
+                                <span class="btn-status-icon"></span>
+                                <span class="btn-status-label">&#8635; Refresh</span>
+                            </span>
+                        </button>
                     </div>
                 </header>
 
@@ -174,7 +184,7 @@
 
                 <div class="scan-box settings-card" data-augmented-ui="tl-clip br-clip border">
                     <h3>Backend Connection</h3>
-                    <p class="instruction">Enter the host and port of the C++ REST server (from <code>rest_host</code> / <code>rest_port</code> in its config).</p>
+                    <p class="instruction">Enter the host and port of the C++ WebSocket server (from <code>ws_host</code> / <code>ws_port</code> in its config).</p>
 
                     <div class="settings-row">
                         <div class="settings-field">
@@ -188,7 +198,10 @@
                     </div>
 
                     <div class="settings-actions">
-                        <button onclick="saveSettings()" class="btn-save-settings">SAVE &amp; CONNECT</button>
+                        <button onclick="saveSettings()" class="btn-save-settings btn-ripple">
+                            <span class="ripple-span"></span>
+                            SAVE &amp; CONNECT
+                        </button>
                         <span id="settings-status" class="settings-status-text"></span>
                     </div>
 

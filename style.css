@@ -343,7 +343,7 @@ h3,
     --aug-border-size: 1px;
 }
 
-/* Hero area */
+
 .stats-row {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -922,6 +922,44 @@ code {
     from { transform: scale(1); opacity: 1; }
     to   { transform: scale(0); opacity: 0; }
 }
+
+/* Status button (refresh) */
+.btn-status { overflow: hidden; }
+
+.btn-status-inner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    pointer-events: none;
+}
+
+.btn-status-inner.is-exiting {
+    animation: status-slide-out 0.08s ease forwards;
+}
+
+.btn-status-inner.is-entering {
+    animation: status-slide-in 0.08s ease forwards;
+}
+
+.btn-status-icon {
+    display: inline-flex;
+    align-items: center;
+    line-height: 0;
+}
+
+.btn-status-icon.is-spinning svg { animation: status-spin 0.75s linear infinite; }
+.btn-status-icon.is-check svg   { animation: status-scale 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+@keyframes status-slide-in  { from { opacity: 0; transform: translateY(-11px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes status-slide-out { from { opacity: 1; transform: translateY(0); }     to { opacity: 0; transform: translateY(11px); } }
+@keyframes status-spin  { to   { transform: rotate(360deg); } }
+@keyframes status-scale { from { transform: scale(0); } to { transform: scale(1); } }
+
+/* Save & Connect ripple — keep filled bg, use translucent white ripple */
+.btn-save-settings.btn-ripple         { background: var(--accent); color: #031014; }
+.btn-save-settings.btn-ripple:hover   { background: #7ffcf5; color: #031014; }
+.btn-save-settings .ripple-span       { background: rgba(255, 255, 255, 0.28); }
 
 /* Report output panel */
 .report-output {
