@@ -1,36 +1,31 @@
-# AstroMed - Visual Inventory Tracking System
+# AIMS - Visual Inventory Tracking System
 
 ## Overview
-AstroMed is a browser interface for viewing shelf inventory and audit activity from the kiosk/backend stack.
+AIMS is a browser interface for viewing shelf inventory and audit activity from the C++ backend stack.
 
-The Settings page is the connection bridge between this web app and the kiosk/backend service, using host and port configuration persisted in localStorage.
+The Settings page connects the web app to the backend via WebSocket, using a host and port persisted in `localStorage`.
 
-## Current Features
-- Login screen for prototype access flow
-- Dashboard with live shelf inventory table
-- Stats cards (total, occupied, empty, backend health)
+## Features
+- Login screen with session-based auth (sessionStorage, SHA-256 hashed password)
+- Dashboard with live shelf inventory table, search/filter, and expandable row details
+- Stats cards: total shelves, occupied, empty, backend health
 - System Logs view for audit entries
-- Settings page for backend host/port connection
+- AIMS Agent: generate and download a formatted inventory report
+- Settings page for WebSocket host/port configuration
+
 
 ## Run Locally
 1. Open `index.html` directly, or
-2. Serve the folder with a local static server (recommended):
+2. Serve with a local static server (recommended to avoid CORS on assets):
 
 ```bash
 python3 -m http.server 5500
 ```
 
-Then open `http://127.0.0.1:5500/index.html`.
+Then open `http://localhost:5500`.
 
-Default password: `67`
-
-## Architecture Notes
-- Frontend: HTML, CSS, vanilla JavaScript
-- Backend integration: REST endpoints configured through Settings
-- Connection configuration: localStorage key `astroMedBackendUrl`
-
-## Design Principles
-- Keep interaction functional and immediate (no decorative typing delays)
-- Use one primary accent color consistently
-- Reserve strong visual effects for key hero components only
-- Keep supporting UI clean and readable for operations use
+## Architecture
+- Frontend: HTML, CSS, vanilla JavaScript — no build step, no dependencies
+- Backend integration: WebSocket (`ws://`)
+- Connection config persisted in: `localStorage` key `astroMedBackendUrl`
+- Auth session persisted in: `sessionStorage` key `astroMedAuth`
